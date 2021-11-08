@@ -1,0 +1,293 @@
+--@@ Tangoe Mobility Project - Final HR File START@@--
+
+--@@ Tangoe Mobility Project - Final HR File START@@--
+
+
+ Select hr1.emailaddress as 'employee_id'
+
+              , hr1.GivenName as 'first_name'
+
+              , coalesce(hr1.Initials, ' ') as 'middle_name'
+
+              , coalesce(hr1.sn, ' ') as last_name
+
+              , coalesce(hr1.OfficePhone, ' ') as office_phone
+
+              , coalesce(hr1.fax, ' ') as fax_phone
+
+              , coalesce(hr1.mobile, ' ') as cell_phone
+
+              , coalesce(hr1.pager, ' ') as pager
+
+              , coalesce(hr1.title, ' ')as title
+
+              , Case hr1.Company
+
+              When 'Western Field Services' Then 'WFS'
+
+              When 'Western Energy Services Corp.' Then 'WRN'
+
+              When 'Horizon Drilling' Then 'HZN'
+
+              When 'Eagle Well Servicing' Then 'EWS'
+
+              When 'Aero Rental Services' Then 'AER'
+
+              When 'Stoneham Drilling Corporation' Then 'STM'
+
+              Else 'Uknown'
+
+              End
+
+              + ' ' + hr1.Description As child_id
+
+              , hr2.emailaddress as 'Manager ID'
+
+              , hr1.emailaddress as email_address
+
+              , Case hr1.enabled
+
+              When 1 Then 'Active'
+
+              When 0 Then 'InActive'
+
+              Else 'Unknown'
+
+              End as employee_status_id
+
+              , DateAdd(d, hr1.accountexpires/86400000000000, Getdate())as Termination_date
+
+              --, ROUND((CAST(hr1.accountexpires AS BigInt) / 10000000 - 11644560000 - CAST(DATEDIFF(SECOND, '19700101', DATEADD(dd, DATEDIFF(dd, 0, GETDATE()), 0)) AS VARCHAR(64))) / 60 / 60 / 24, 0) as termination_date
+
+              --, ROUND((CAST(hr1.accountexpires AS BigInt) / 10000000 - 11644560000 - CAST(DATEDIFF(SECOND, '19700101', DATEADD(dd, DATEDIFF(dd, 0, GETDATE()), 0)) AS VARCHAR(64))) / 60 / 60 / 24, 0) as termination_date
+
+              --, DateAdd(day, ROUND((CAST(hr1.accountexpires AS BigInt) / 10000000 - 11644560000 - CAST(DATEDIFF(SECOND, '19700101', DATEADD(dd, DATEDIFF(dd, 0, GETDATE()), 0)) AS VARCHAR(64))) / 60 / 60 / 24, 0), Getdate()) as termination_date
+
+              --, Dateadd(M, 12, '1601/01/01') as termination_date
+
+              --, hr1.accountexpires as termination_date
+
+              , hr1.emailaddress as login
+
+              , coalesce(hr1.Office, ' ')  as shipping_address_line_1
+
+              , coalesce(hr1.department, ' ') + ' Dept.' as shipping_address_line_2
+
+              , coalesce(hr1.streetaddress, ' ') as shipping_address_line_3
+
+              , coalesce(hr1.city, ' ') as shipping_address_city
+
+              , coalesce(hr1.state, ' ') as shipping_address_state
+
+              , coalesce(hr1.state, ' ') as shipping_address_province
+
+              , coalesce(hr1.co, ' ') as shipping_address_country
+
+              , coalesce(hr1.postalcode, ' ') as shipping_address_postal_code
+
+From [Tangoe].[dbo].[activedirectory$] as HR1 Left JOIN [Tangoe].[dbo].[activedirectory$] as HR2
+
+ ON hr1.manager = hr2.distinguishedname
+
+Where hr1.emailaddress is not null and hr1.Title is not null
+
+Order By hr1.name
+
+;
+
+--@@ Tangoe Mobility Project - Final HR File END@@--
+
+--@@ Tangoe Mobility Project - Final HR File END@@--
+
+ 
+
+--@@ Tangoe Mobility Project - Final DEP FIle Start@@--
+
+ 
+
+--NOTE: Company Name to Root Management Group
+
+ 
+
+Select Distinct hr1.company as child_id
+
+              , hr1.company as child_name
+
+              , Case hr1.enabled
+
+              When '1' Then 'Active'
+
+              When '2' Then 'Active'
+
+              Else 'Active'
+
+              End as status
+
+              , Right(RTRIM(hr1.DistinguishedName), 19) as parent_id
+
+              , Case Right(RTRIM(hr1.DistinguishedName), 19)
+
+              When 'DC=wesc,DC=internal' Then 'Western Energy Servies Corp.'
+
+              Else 'Unknown'
+
+              End as parent_name
+
+             
+
+From [Tangoe].[dbo].[activedirectory$] as HR1 Left JOIN [Tangoe].[dbo].[activedirectory$] as HR2
+
+ ON hr1.manager = hr2.distinguishedname
+
+Where hr1.emailaddress is not null and hr1.department is not null and hr1.company is not null
+
+
+ -- Company Name to Root Management Group End
+
+Union
+
+
+ --NOTE: Location to Company-
+
+ 
+
+Select Distinct Case hr1.Company
+
+                                  When 'Western Field Services' Then 'WFS'
+
+                                  When 'Western Energy Services Corp.' Then 'WRN'
+
+                                  When 'Horizon Drilling' Then 'HZN'
+
+                                  When 'Eagle Well Servicing' Then 'EWS'
+
+                                  When 'Aero Rental Services' Then 'AER'
+
+                                  When 'Stoneham Drilling Corporation' Then 'STM'
+
+                                  Else 'Uknown'
+
+                            End  + N' ' + Hr1.City as child_id
+
+                           , hr1.city as child_name
+
+                           , Case hr1.enabled
+
+                                  When '1' Then 'Active'
+
+                                  When '2' Then 'Active'
+
+                                  Else 'Active'
+
+                                  End as status
+
+                           , hr1.company as parent_id
+
+                           , hr1.company as parent_name
+
+             
+
+ From [Tangoe].[dbo].[activedirectory$] as HR1 Left JOIN [Tangoe].[dbo].[activedirectory$] as HR2
+
+ ON hr1.manager = hr2.distinguishedname
+
+Where hr1.emailaddress is not null and hr1.department is not null and hr1.company is not null and hr1.city is not null
+
+
+  --NOTE: Location to Company Ends-
+
+  Union
+
+ 
+
+ --NOTE: Department Cost Center to Company Location--
+
+ 
+
+  Select Distinct Case hr1.Company
+
+                                         When 'Western Field Services' Then 'WFS'
+
+                                         When 'Western Energy Services Corp.' Then 'WRN'
+
+                                         When 'Horizon Drilling' Then 'HZN'
+
+                                         When 'Eagle Well Servicing' Then 'EWS'
+
+                                         When 'Aero Rental Services' Then 'AER'
+
+                                         When 'Stoneham Drilling Corporation' Then 'STM'
+
+                                         Else 'Uknown'
+
+                                         End
+
+                           + ' ' + hr1.Description as child_id
+
+                           , Case hr1.Company
+
+                                         When 'Western Field Services' Then 'WFS'
+
+                                         When 'Western Energy Services Corp.' Then 'WRN'
+
+                                         When 'Horizon Drilling' Then 'HZN'
+
+                                         When 'Eagle Well Servicing' Then 'EWS'
+
+                                         When 'Aero Rental Services' Then 'AER'
+
+                                         When 'Stoneham Drilling Corporation' Then 'STM'
+
+                                         Else 'Uknown'
+
+                                         End
+
+                     --                   + ' ' + hr1.department + ' ' + hr1.Description as child_name
+
+                                         + ' ' + hr1.Description as child_name
+
+                           , Case hr1.enabled
+
+                                  When '1' Then 'Active'
+
+                                  When '2' Then 'Active'
+
+                                  Else 'Active'
+
+                                  End as status
+
+                           , Case hr1.Company
+
+                                         When 'Western Field Services' Then 'WFS'
+
+                                         When 'Western Energy Services Corp.' Then 'WRN'
+
+                                         When 'Horizon Drilling' Then 'HZN'
+
+                                         When 'Eagle Well Servicing' Then 'EWS'
+
+                                         When 'Aero Rental Services' Then 'AER'
+
+                                         When 'Stoneham Drilling Corporation' Then 'STM'
+
+                                         Else 'Uknown'
+
+                                         End 
+
+                                         + N' ' + Hr1.City as parent_id
+
+                           , hr1.city as parent_name
+
+                    
+
+From [Tangoe].[dbo].[activedirectory$] as HR1 Left JOIN [Tangoe].[dbo].[activedirectory$] as HR2
+
+ ON hr1.manager = hr2.distinguishedname
+
+Where hr1.emailaddress is not null and hr1.department is not null and hr1.company is not null and hr1.city is not null
+
+Order By Parent_name
+
+;
+
+  --NOTE: Location to Company End-
